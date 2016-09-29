@@ -103,9 +103,22 @@
 </body>
 </html>
 <script type="text/javascript">
+	var pixs = [{x:121.50,y:31.22},{x:121.50,y:31.25},{x:121.50,y:31.50}];
+	var initIcon = new BMap.Icon("../icon/arrow_0.png", new BMap.Size(50,50));
+	
+	var overlays = []; //存放marker的数组 
+	
 	// 百度地图API功能
 	var map = new BMap.Map("l-map");    // 创建Map实例
-	//var point = new BMap.Point(116.403694,39.927552); //北京
+	map.addEventListener("load",function(){ //Map.centerAndZoom()方法时会触发此事件，该方法必须写在map.centerAndZoom前
+		flushMarker();
+	});
+	map.addEventListener("zoomend",function(){
+		flushMarker();
+	});
+	map.addEventListener("moveend",function(){ 
+		flushMarker();
+	});
 	var point = new BMap.Point(121.50, 31.22); //上海
 	map.centerAndZoom(point, 14); // 定位中心点（经度、纬度）,显示范围（1是整个地球，越大越精细）
 	map.addControl(new BMap.MapTypeControl());   //添加地图类型控件
@@ -113,9 +126,8 @@
 	map.enableScrollWheelZoom(true);     //开启鼠标滚轮缩放
 	map.addControl(new BMap.NavigationControl());  //添加默认缩放平移控件
     
-	/////////////////////////////////////////////////////////////////marker
+	/////////////////////////////////////////////////////////////////marker-move 方式1
 
-	var overlays = [];
 	function delMarkers(){
 		$(overlays).each(function(){
 			map.removeOverlay(this);
@@ -127,27 +139,62 @@
 		for(var i=0; i<pixs.length; i++){
 			var pix = pixs[i];
 			//var marker= new BMapLib.RichMarker(htm, new BMap.Point(pix.x,pix.y),{"anchor" : new BMap.Size(-72, -84), "enableDragging" : false});
-			var marker=new BMap.Marker(new BMap.Point(pix.x,pix.y), {icon: myIcon});
-			map.addOverlay(marker);
-			overlays.push(marker);
+			var point =new BMap.Point(pix.x,pix.y);
+			if(map.getBounds().containsPoint(point)){  //地图可视区域包含point，才mark
+				var marker=new BMap.Marker(point, {icon: myIcon});
+				map.addOverlay(marker);
+				overlays.push(marker);
+			}
 		}
 	}
-
-	/*function rotate(pixS, pixE){
+	
+	function flushMarker(){
+		delMarkers();
+		addMarkers(pixs, initIcon);
+	}
+	
+	function resetPoint(marker, pix){
+		var prePoint = marker.getPosition();
+		marker.setPosition(new BMap.Point(pix.x,pix.y));
+		marker.prePoint = prePoint;
+		marker.setIcon(createIcon(getAngle(marker.prePoint, marker.getPosition())));
+	}
+	
+	//return: -PI to PI  
+    function getAngle(pt1, pt2){  
+        return Math.atan2(pt2.lat - pt1.lat, pt2.lng - pt1.lng);  
+    }
+	
+    /*function rotate(pixS, pixE){
 		return 180*Math.atan((pixE.y-pixS.y)/(pixE.x-pixS.x))/Math.PI;
 	}*/
-
-	var myIcon = new BMap.Icon('http://api.map.baidu.com/library/LuShu/1.2/examples/car.png', new BMap.Size(52,26),{anchor : new BMap.Size(13, 7)});
-	var pixs = [{x:121.50,y:31.22},{x:121.50,y:31.25}];
-	function move(){
-		delMarkers()
+	
+    function createIcon(angle) {  
+        //从负Y轴方向开始顺时针查找角度  
+        var adjAngles = [180,202,225,247,270,292,315,337,0,22,45,67,90,112,135,157];  
+        adjAngle = angle;
+        var adjIndex = 0;  
+        for (var i = 0; i < 16; i++){  
+            if (adjAngle < (- 15 / 16  + i / 8 ) *Math.PI) {  
+                adjIndex = i;  
+                break;  
+            }  
+        }     
+        return new BMap.Icon("../icon/arrow_" + adjAngles[adjIndex] + ".png", new BMap.Size(52,52),{anchor : new BMap.Size(1, 1)});  //size图标可视区域的大小,anchor图标的定位点相对于图标左上角的偏移值  
+    }
+    
+    function move(){
 		$(pixs).each(function(){
 			this.x = this.x+0.00001;
 			this.y = this.y-0.00001;
 		});
-		addMarkers(pixs, myIcon);
+		var i = 0;
+		$(overlays).each(function(){
+			resetPoint(this,pixs[i++]);
+		});
 	}
-	setInterval("move()",100);
+    setInterval("flushMarker()",10000); //即使同一区域也可能有新车辆产生，需要隔一段时间刷新一次
+    setInterval("move()",100);
 
 	//////////////////////////////////////////////////////////////////////////////////////路书
 	var lushu;

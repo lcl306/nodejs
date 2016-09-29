@@ -23,6 +23,14 @@ function form(request, callback){
 	});
 }
 
+function json(request, callback){
+	//request.setEncoding(coding);
+	var form = new formidable.IncomingForm();
+	form.parse(request, function(err, fields, files){
+		callback(fields,err);
+	});
+}
+
 function write(response, body){
 	write(response, body, false);
 }
@@ -76,6 +84,7 @@ function headPlain200(response){
 }
 
 exports.form = form;
+exports.json = json;
 exports.write = write;
 exports.head200 = head200;
 

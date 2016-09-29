@@ -5,6 +5,9 @@
 	<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
 
 	<script src="http://libs.baidu.com/jquery/2.0.0/jquery.js"></script>
+	<script src="../js/base.js"></script>
+	<script src="../js/jquery.json-2.2.min.js"></script>
+	
 	<script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=A4749739227af1618f7b0d1b588c0e85"></script>
 	<!-- 加载百度地图样式信息窗口 -->
 	<script type="text/javascript" src="http://api.map.baidu.com/library/SearchInfoWindow/1.5/src/SearchInfoWindow_min.js"></script>
@@ -137,6 +140,10 @@
 	var mapHandler = function(){
 		console.debug(this);
 	}
+	//map常用事件
+	//load Map.centerAndZoom()方法时会触发此事件，该方法必须写在map.centerAndZoom前
+	//zoomend map缩放结束后
+	//moveend map移动结束后
 	map.addEventListener("click", mapHandler);
 	map.removeEventListener("click",mapHandler);
 	map.addEventListener("dragend", mapHandler);
@@ -279,6 +286,14 @@
 		var dBtn = $('<input type="button" id="d_ok" value="删除">').appendTo(div);
 		oBtn.css({"background":"blue","color":"#fff"}).on("click", function(){
 			//服务器添加
+			/*var data ={};
+			data.shop_title = "店铺";
+			data.shop_nm = inp.val();
+			data.lng = overlay.getPosition().lng;
+			data.lat = overlay.getPosition().lat;
+			$.post("/bmap-marker-saveShop", data, function(){
+				
+			});*/
 			overlay.sval = inp.val();
 			overlay.infoWindow.close();
 		});
